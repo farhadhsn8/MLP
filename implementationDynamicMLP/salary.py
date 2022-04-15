@@ -43,7 +43,7 @@ def plotting(test):
         est = SALARY_MLP.calculateMLP_outputForRow_k(i[0])
         results.append(est)
     
-    print(test.values[: , 0] , test.values[: , 1])
+    
 
 
     sns.set_style("darkgrid")
