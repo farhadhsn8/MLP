@@ -8,6 +8,8 @@ class RBFNetClassifer():
         self.features = features
         self.targets = targets
         self.numberOfGaussians = numberOfGaussians
+        self.clusters , self.centers  = self.k_means()
+        self.stds = self.calculate_std()
         # self.means , self.std = self.k_means()
         # self.k_means()
 
@@ -32,9 +34,24 @@ class RBFNetClassifer():
             
             if (centers - centers_copy).sum() < 0.00001 : 
                 converged = True
-        return clusters
+        return clusters , centers
+
+    def gaussian(self , center , std , x):
+      return np.exp(-1 / (2 * std ** 2) * (x - center)**2)
+
+    def calculate_std(self):
+      max = -1
+      for center1 in self.centers :
+        for center2 in self.centers :
+          if max <  np.linalg.norm(center1 - center2) : 
+              max =  np.linalg.norm(center1 - center2)
+
+      return max / ((2 * self.numberOfGaussians)**(1/2))
+
+    # def training(self):
 
 
+    # def predict(self , newData):
                     
 
 
@@ -43,9 +60,9 @@ df = pd.read_csv('Q4.csv')
 X  = df['x'].values.reshape(-1,1)
 Y  = df['y'].values.reshape(-1,1)
 TT = np.hstack((X,Y))
-Z = RBFNetClassifer(np.array(TT) , np.array([Y]) ,5)
+Z = RBFNetClassifer(np.array(TT) , np.array([Y]) ,15)
 
-A = Z.k_means()
+A , _ = Z.k_means()
 
 fig, ax = plt.subplots()
 
@@ -55,7 +72,3 @@ fig, ax = plt.subplots()
 ax.scatter(X.T, Y.T, c=A)
 
 plt.show()
-    # def training(self):
-
-
-    # def predict(self , newData):
