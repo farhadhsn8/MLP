@@ -16,8 +16,7 @@ class RBFNetClassifer():
         self.stds = self.calculate_std()
         self.bias = np.random.rand()
         self.W = np.random.rand(numberOfGaussians)
-        # self.means , self.std = self.k_means()
-        # self.k_means()
+       
 
     def k_means(self):
         random_indices = np.random.choice(self.features.shape[0] , self.numberOfGaussians, replace=False)
@@ -40,6 +39,8 @@ class RBFNetClassifer():
             
             if (centers - centers_copy).sum() < 0.00001 : 
                 converged = True
+            for i in range(centers.shape[0]):
+                centers[i] = self.features[clusters==i].mean(axis= 0)
         return clusters , centers
 
     def gaussianLayer(self  , x):
@@ -47,6 +48,7 @@ class RBFNetClassifer():
       for i in range(self.numberOfGaussians):
         d = np.linalg.norm(x - self.centers[i])
         out.append( np.exp(-((d/self.stds)**2)))
+        # out.append(np.exp(-1 / (2 * self.stds**2) * (d)**2))
 
       return np.array(out)
 
@@ -62,29 +64,48 @@ class RBFNetClassifer():
       return max / ((2 * self.numberOfGaussians)**(1/2))
 
     def calculateOutput(self , G_layer):
-      y_net = G_layer.dot(self.W) + self.baias
+      # print('self.W' ,self.W.shape , 'G_layer ' ,G_layer.shape  )
+      y_net = G_layer.dot(self.W) + self.bias
       return expit(y_net)
 
     def training(self ,  epochs = 5):
       for ep in range(epochs):
+        print(ep+1)
         for i in range(self.features.shape[0]):
           G_Layer = self.gaussianLayer(self.features[i])
           y_p = self.calculateOutput(G_Layer)
+          # print('self.targets[i]' ,self.targets[i] )
           delta = y_p * (1 - y_p) * (self.targets[i] - y_p)
-          self.W = self.W - self.eta * delta * G_Layer
-          self.bias = self.bias - self.eta * delta * 1
+          # delta = y_p - self.targets[i]
+          # print('111111111' ,self.W.shape ,' self.eta ' ,  self.eta  ,'G_Layer' ,G_Layer.shape )
+          self.W = self.W + self.eta * delta * G_Layer
+          # print('22222222' ,self.W.shape   )
+          self.bias = self.bias + self.eta * delta * 1
 
 
-    # def predict(self , newData):
+    def predict(self , newData):
+      return self.calculateOutput(self.gaussianLayer(newData))
                     
+
+
+
+
+
+
+
 
 
 df = pd.read_csv('Q4.csv')
 
+from sklearn.utils import shuffle
+df = shuffle(df)
+
 X  = df['x'].values.reshape(-1,1)
 Y  = df['y'].values.reshape(-1,1)
+D = df['D'].values
+
 TT = np.hstack((X,Y))
-Z = RBFNetClassifer(np.array(TT) , np.array([Y]) ,15)
+Z = RBFNetClassifer(np.array(TT) , D ,100 , 0.1)
 
 A , _ = Z.k_means()
 
@@ -94,5 +115,22 @@ fig, ax = plt.subplots()
 
 
 ax.scatter(X.T, Y.T, c=A)
-
 plt.show()
+
+
+
+Z.training(50)
+
+
+
+
+
+TT = np.array(TT)
+true = 0
+for i in range(TT.shape[0]):
+
+  n = Z.predict(TT[i])
+  # print(n ,int(n > 0.5) , D[i])
+  if(int(n > 0.5) == D[i]) : 
+    true += 1
+print(true / TT.shape[0])
