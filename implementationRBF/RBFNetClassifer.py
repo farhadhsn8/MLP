@@ -100,22 +100,28 @@ df = pd.read_csv('Q4.csv')
 from sklearn.utils import shuffle
 df = shuffle(df)
 
-X  = df['x'].values.reshape(-1,1)
-Y  = df['y'].values.reshape(-1,1)
-D = df['D'].values
+data_set = np.array(df.values)
 
-TT = np.hstack((X,Y))
-Z = RBFNetClassifer(np.array(TT) , D ,100 , 0.1)
+train = data_set[:800]
+test = data_set[800:]
+
+# X  = df['x'].values.reshape(-1,1)
+# Y  = df['y'].values.reshape(-1,1)
+# D = df['D'].values
+
+# TT = np.hstack((X,Y))
+Z = RBFNetClassifer(train[:,0:2], train[:,2].reshape(-1,1) ,50 , 0.1)
 
 A , _ = Z.k_means()
 
 fig, ax = plt.subplots()
 
-
-
-
-ax.scatter(X.T, Y.T, c=A)
+ax.scatter(train[:,0], train[:,1], c=A)
 plt.show()
+
+
+
+test.shape
 
 
 
@@ -125,12 +131,22 @@ Z.training(50)
 
 
 
-TT = np.array(TT)
 true = 0
-for i in range(TT.shape[0]):
+for i in range(train.shape[0]):
 
-  n = Z.predict(TT[i])
+  n = Z.predict(train[i , 0:2])
   # print(n ,int(n > 0.5) , D[i])
-  if(int(n > 0.5) == D[i]) : 
+  if(int(n > 0.5) == train[i , 2]) : 
     true += 1
-print(true / TT.shape[0])
+print(true / train.shape[0])
+
+
+
+true = 0
+for i in range(test.shape[0]):
+
+  n = Z.predict(test[i , 0:2])
+  # print(n ,int(n > 0.5) , D[i])
+  if(int(n > 0.5) == test[i , 2]) : 
+    true += 1
+print(true / test.shape[0])
